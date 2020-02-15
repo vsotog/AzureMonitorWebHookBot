@@ -1,0 +1,3 @@
+azure-functions
+httplib2
+lxml
