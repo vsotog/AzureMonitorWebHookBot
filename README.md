@@ -14,3 +14,4 @@ The aim of this was to have notification in google chat room on specific actions
  - https://docs.microsoft.com/en-us/azure/python/tutorial-vs-code-serverless-python-01 
    The information in the link above will teach you how to create/debug/deploy python based function apps
  - update bot_url in script. This is the link that you obtain when you add "Incoming webhook" in google chat room.
+ - when you deploy app to azure - go to your favorite project and in setting configure service hook (Post via HTTP)
