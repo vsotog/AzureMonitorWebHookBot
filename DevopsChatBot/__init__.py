@@ -8,6 +8,9 @@ from lxml import html
 
 import azure.functions as func
 
+################################################################################
+bot_url = here goes googleapis link to your room
+################################################################################
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
@@ -30,12 +33,19 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 description = resource['description'] 
             else: 
                 description = None
+            if description == title or description == "":
+                description = None
             author = resource['createdBy']['displayName']
             link_to_pr = resource['_links']['web']['href']
+            is_draft = resource['isDraft']
+            final_message = f"Hello dear friends!\n{author} created <{link_to_pr}|pull request>\nTitle: *{title}*\n"
             if description is None:
-                final_message = f"Hello dear friends!\n{author} created <{link_to_pr}|pull request>\nTitle: *{title}*\nPull request has no description - shame on you {author} :)"
+                final_message = final_message + f"Pull request has no description - shame on you {author} :)"
             else:
-                final_message = f"Hello dear friends!\n{author} created <{link_to_pr}|pull request>\nTitle: *{title}*\nDescription:\n{description}"
+                final_message = final_message + f"Description:\n{description}"
+            if is_draft == True:
+                final_message = final_message + "\n\n\n *Please note that this is draft pull request - so be kind*"
+
         elif event_type=='ms.vss-code.git-pullrequest-comment-event':
             resource = parsed_body['resource']
             author = resource['author']['displayName']
@@ -64,9 +74,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
         if (len(final_message)>0):
             http_obj = Http()
-            ################################################################################
-            bot_url = here goes googleapis link to your room
-            ################################################################################
             
             bot_message = {
                 'text': final_message
