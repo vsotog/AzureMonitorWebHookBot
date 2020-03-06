@@ -12,6 +12,7 @@ import azure.functions as func
 bot_url = here goes googleapis link to your room
 ################################################################################
 
+
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('Python HTTP trigger function processed a request.')
 
@@ -48,11 +49,18 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
         elif event_type=='ms.vss-code.git-pullrequest-comment-event':
             resource = parsed_body['resource']
-            author = resource['author']['displayName']
-            if 'content' in resource.keys():
-                content = resource['content']
+            if 'comment' in resource.keys():
+                author = resource['comment']['author']['displayName']
+                if 'content' in resource['comment'].keys():
+                    content = resource['comment']['content']
+                else:
+                    return func.HttpResponse(f"Comment is not PTAL", status_code=200)
             else:
-                return func.HttpResponse(f"Comment is not PTAL", status_code=200)
+                author = resource['author']['displayName']
+                if 'content' in resource.keys():
+                    content = resource['content']
+                else:
+                    return func.HttpResponse(f"Comment is not PTAL", status_code=200)
             html_message = parsed_body['message']['html']
             string_document = html.fromstring(html_message) 
             link_to_pr = ""
