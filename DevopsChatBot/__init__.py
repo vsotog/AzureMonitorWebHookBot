@@ -9,7 +9,7 @@ from lxml import html
 import azure.functions as func
 
 ################################################################################
-bot_url = here goes googleapis link to your room
+bot_url = 'URL'
 ################################################################################
 
 
@@ -24,60 +24,24 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info(f"END-----------------------------------------------------")
     try:
         parsed_body = json.loads(req.get_body())
-        event_type = parsed_body['eventType']
+        alert_context = parsed_body['alertContext']
         final_message = ""
-        if event_type=='git.pullrequest.created':
-            logging.info(f"parsed body is {parsed_body}")            
-            resource = parsed_body['resource']
-            title = resource['title']
-            if 'description' in resource.keys():
-                description = resource['description'] 
-            else: 
-                description = None
-            if description == title or description == "":
-                description = None
-            author = resource['createdBy']['displayName']
-            link_to_pr = resource['_links']['web']['href']
-            is_draft = resource['isDraft']
-            final_message = f"Hello dear friends!\n{author} created <{link_to_pr}|pull request>\nTitle: *{title}*\n"
-            if description is None:
-                final_message = final_message + f"Pull request has no description - shame on you {author} :)"
-            else:
-                final_message = final_message + f"Description:\n{description}"
-            if is_draft == True:
-                final_message = final_message + "\n\n\n *Please note that this is draft pull request - so be kind*"
-
-        elif event_type=='ms.vss-code.git-pullrequest-comment-event':
-            resource = parsed_body['resource']
-            if 'comment' in resource.keys():
-                author = resource['comment']['author']['displayName']
-                if 'content' in resource['comment'].keys():
-                    content = resource['comment']['content']
-                else:
-                    return func.HttpResponse(f"Comment is not PTAL", status_code=200)
-            else:
-                author = resource['author']['displayName']
-                if 'content' in resource.keys():
-                    content = resource['content']
-                else:
-                    return func.HttpResponse(f"Comment is not PTAL", status_code=200)
-            html_message = parsed_body['message']['html']
-            string_document = html.fromstring(html_message) 
-            link_to_pr = ""
-            link = list(string_document.iterlinks()) 
-            if len(link):                
-                (element, attribute, link_to_pr, pos) = link[0]             
-            if re.match("^PTAL$",content):
-                final_message = f"Hello dear friends!\n{author} wants us to take another look <{link_to_pr}|at this pull request>"
-            elif re.match("^PTAL ASAP$",content):
-                final_message = f"Hello dear friends!\n\n\n\n\n{author} *really really really* wants you to take another look <{link_to_pr}|at this pull request>"
-            elif re.match("^PTAL KURWA$",content):
-                final_message = f"Hello lazy buttheads!\n\n\n\n\nNow everyone !!! Put away what you are doing and go <{link_to_pr}|here> to finish reviewing this PR because otherwise author ->{author}<- starts throwing stones at you if you wont do it ASAP!!!\n\n\nNow move!!!!"
-            else:
-                return func.HttpResponse(f"Comment is not PTAL", status_code=200)
-        else:
-            final_message = f"unable to process event {event_type} - tell Konrad to debug ;P"
-
+        alert_type = alert_context['AlertType']
+        if alert_type=='SSH User Login in VM':
+            final_message = final_message + "\n⚠ *SSH user has logged in to a VM* ⚠\n "
+            search_results = alert_context['SearchResults']
+            tables = search_results['tables']
+            columns = tables[0]['columns']
+            for column in columns:
+                if column['name']=='TimeGenerated':
+                    final_message = final_message + "\n*Generated at:* "+ column['type']
+                if column['name']=='Computer':
+                    final_message = final_message + "\n*Virtual Machine:* "+ column['type']
+                if column['name']=='SeverityLevel':
+                    final_message = final_message + "\n*Severity level:* "+ column['type']
+                if column['name']=='SyslogMessage':
+                    final_message = final_message + "\n*Message:* "+ column['type']
+            
         logging.info(f"extracted message: {final_message}")
 
         if (len(final_message)>0):
