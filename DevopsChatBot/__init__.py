@@ -24,24 +24,43 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info(f"END-----------------------------------------------------")
     try:
         parsed_body = json.loads(req.get_body())
+        # For query alerts
         alert_context = parsed_body['alertContext']
         final_message = ""
         alert_type = alert_context['AlertType']
-        if alert_type=='SSH User Login in VM':
-            final_message = final_message + "\n⚠ *SSH user has logged in to a VM* ⚠\n "
-            search_results = alert_context['SearchResults']
-            tables = search_results['tables']
-            columns = tables[0]['columns']
-            for column in columns:
-                if column['name']=='TimeGenerated':
-                    final_message = final_message + "\n*Generated at:* "+ column['type']
-                if column['name']=='Computer':
-                    final_message = final_message + "\n*Virtual Machine:* "+ column['type']
-                if column['name']=='SeverityLevel':
-                    final_message = final_message + "\n*Severity level:* "+ column['type']
-                if column['name']=='SyslogMessage':
-                    final_message = final_message + "\n*Message:* "+ column['type']
-            
+        if alert_context:
+            if alert_type=='SSH User Login in VM':
+                final_message = final_message + "\n⚠ *SSH user has logged in to a VM* ⚠\n "
+                search_results = alert_context['SearchResults']
+                tables = search_results['tables']
+                columns = tables[0]['columns']
+                for column in columns:
+                    if column['name']=='TimeGenerated':
+                        final_message = final_message + "\n*Generated at:* "+ column['type']
+                    if column['name']=='Computer':
+                        final_message = final_message + "\n*Virtual Machine:* "+ column['type']
+                    if column['name']=='SeverityLevel':
+                        final_message = final_message + "\n*Severity level:* "+ column['type']
+                    if column['name']=='SyslogMessage':
+                        final_message = final_message + "\n*Message:* "+ column['type']
+                
+        # For metric alerts
+        if not alert_context and (parsed_body['status'] == 'active' ):
+            alert_context = parsed_body['context']
+            conditions = alert_context['condition']
+            resource_name = alert_context['resourceName']
+            resource_type = alert_context['resourceType'] 
+            final_message = final_message + "\n⚠ *Metric alert from" + resource_type + "* ⚠\n"
+            for condition in conditions:
+                if condition[0] = 'metricName':
+                     final_message = final_message + "\n*Metric name:* "+ condition[1]
+                if condition[0] = 'metricUnit':
+                     final_message = final_message + "\n*Metric unit:* "+ condition[1]
+                if condition[0] = 'metricValue':
+                     final_message = final_message + "\n*Metric value:* "+ condition[1]      
+                if condition[0] = 'operator':
+                     final_message = final_message + "\n*Metric operator:* "+ condition[1]  
+
         logging.info(f"extracted message: {final_message}")
 
         if (len(final_message)>0):
