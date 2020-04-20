@@ -1,14 +1,15 @@
-# AzureDevopsWebHookBot
+# AzureMonitorBot
 
 The aim of this was to have notification in google chat room on specific actions in azure (http service hooks).
 
 # Currently supported features
-   - send message to google chat room on pull request creation
-   - send message to google chat room on specific comments (like "PTAL" - will tell reviewers that author asks reviewers "Please Take Another Look"
+   - send message to google chat room when alerts are triggered
+   - Log query and Metric alerts supported
 
 # Requirements
   - Azure account
   - Configured azure functions 
+  - Azure Action Group must use [Common Alert Schema](https://docs.microsoft.com/en-us/azure/azure-monitor/platform/alerts-common-schema)
   
 # How to install
  - https://docs.microsoft.com/en-us/azure/python/tutorial-vs-code-serverless-python-01 
